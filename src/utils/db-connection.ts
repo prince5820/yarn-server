@@ -1,10 +1,10 @@
 import mysql, { Connection } from "mysql";
 
 const dbConnection: Connection = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: 'root',
-  database: 'full_stack_demo',
+  host: 'bj4pcstpt5emmq5btlg8-mysql.services.clever-cloud.com',
+  user: 'uguehyt6jxhmyfrd',
+  password: '87Adyy1OtVcS6KsTBcdm',
+  database: 'bj4pcstpt5emmq5btlg8',
   charset: 'utf8mb4'
 });
 
