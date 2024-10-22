@@ -28,6 +28,12 @@ app.use(cors({
   credentials: true,
 }));
 
+app.use('/socket.io', cors({
+  origin: 'https://talkwallet.netlify.app',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  credentials: true,
+}));
+
 app.options('*', cors());
 
 app.use(userRouter);
