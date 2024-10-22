@@ -22,7 +22,10 @@ const server = createServer(app);
 const io = initializeWebSocket(server);
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ limit: '2mb', extended: true }));
-app.use(cors());
+app.use(cors({
+  origin: 'https://talkwallet.netlify.app',
+  credentials: true,
+}));
 
 app.use(userRouter);
 app.use(profileRouter);
