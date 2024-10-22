@@ -106,7 +106,7 @@ export const sendMessage = (req: Request, res: Response, io: any) => {
       const buffer = Buffer.from(fileData, 'base64');
 
       // Define the upload path (e.g., './uploaded-files/')
-      const uploadDir = path.resolve(__dirname, '../../uploaded-files/');
+      const uploadDir = path.resolve(__dirname, '../../dist/uploaded-files/');
       const newFileName = `${Date.now()}-${fileName}`;
       const filePath = path.join(uploadDir, newFileName);
 
