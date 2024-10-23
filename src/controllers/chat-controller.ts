@@ -114,30 +114,30 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 export const sendMessage = (req: Request, res: Response, io: any) => {
-  const { messageText, senderId, receiverId, file } = req.body;
-  console.log(req.body);
+  const { messageText, senderId, receiverId } = req.body;
+  const file = req.file;
   console.log(file);
 
   try {
     if (file) {
-      // upload.single('file')(req, res, (err) => {
-      //   if (err) {
-      //     console.error('Multer error:', err);
-      //     return res.status(500).json({ error: 'File upload failed', details: err });
-      //   }
+      upload.single('file')(req, res, (err) => {
+        if (err) {
+          console.error('Multer error:', err);
+          return res.status(500).json({ error: 'File upload failed', details: err });
+        }
 
-      //   // Check if the file was uploaded
-      //   if (!file) {
-      //     return res.status(400).json({ message: 'No file uploaded' });
-      //   }
+        // Check if the file was uploaded
+        if (!file) {
+          return res.status(400).json({ message: 'No file uploaded' });
+        }
 
-      //   console.log('File uploaded successfully:', file);
+        console.log('File uploaded successfully:', file);
 
-      //   return res.status(201).json({
-      //     message: 'File uploaded successfully',
-      //     fileInfo: file, // Contains file details (originalname, mimetype, etc.)
-      //   });
-      // });
+        return res.status(201).json({
+          message: 'File uploaded successfully',
+          fileInfo: file, // Contains file details (originalname, mimetype, etc.)
+        });
+      });
 
       // fs.promises.writeFile(filePath, buffer).then(() => {
       //   //   3. Save file metadata to the database
