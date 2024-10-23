@@ -126,15 +126,15 @@ export const sendMessage = (req: Request, res: Response, io: any) => {
         }
 
         // Check if the file was uploaded
-        if (!req.file) {
+        if (!file) {
           return res.status(400).json({ message: 'No file uploaded' });
         }
 
-        console.log('File uploaded successfully:', req.file);
+        console.log('File uploaded successfully:', file);
 
         return res.status(201).json({
           message: 'File uploaded successfully',
-          fileInfo: req.file, // Contains file details (originalname, mimetype, etc.)
+          fileInfo: file, // Contains file details (originalname, mimetype, etc.)
         });
       });
 
