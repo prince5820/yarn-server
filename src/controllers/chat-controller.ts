@@ -119,10 +119,10 @@ export const sendMessage = (req: Request, res: Response, io: any) => {
 
       uploadStorage.single('file')(req, res, (err) => {
         if (err) {
-          console.log(err);
+          return res.status(500).send(err);
         }
 
-        console.log(res);
+        return res.send(201).send(res);
       })
 
 
