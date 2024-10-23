@@ -16,6 +16,7 @@ import { convertArrayKeysToCamelCase, convertKeysToCamelCase } from "../common/u
 import { formatDate } from "../common/utils/date-trimmer";
 import transporter from "../config/mail-config";
 import dbConnection from "../utils/db-connection";
+import multer from "multer";
 
 export const getUsers = (req: Request, res: Response) => {
   dbConnection.query('SELECT * FROM is_user', (err: MysqlError | null, result: User[]) => {
@@ -100,32 +101,40 @@ export const sendMessage = (req: Request, res: Response, io: any) => {
 
   try {
     if (file) {
-      const { fileName, fileType, fileData } = file;
-
-      // Decode the base64 file data
-      const buffer = Buffer.from(fileData, 'base64');
-
-      // Define the upload path (e.g., './uploaded-files/')
-      const uploadDir = path.join(__dirname, '../../public/uploads/');
-      console.log("aaa uploadDir ==>", uploadDir);
-      const newFileName = `${Date.now()}-${fileName}`;
-      const filePath = path.join(uploadDir, newFileName);
-
-      // Ensure the directory exists
+      const uploadDir = path.join('../../public/uploads/');
       if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true });
       }
 
-      fs.writeFile(filePath, buffer, (err) => {
+      // Set up multer storage
+      const storage = multer.diskStorage({
+        destination: (req, file, cb) => {
+          cb(null, uploadDir); // Set destination folder for uploads
+        },
+        filename: (req, file, cb) => {
+          const uniqueName = Date.now() + "-" + file.originalname;
+          cb(null, uniqueName); // Generate unique file name
+        }
+      });
+
+      const upload = multer({ storage: storage });
+
+      upload.single('file')(req, res, (err) => {
         if (err) {
-          console.error('Error writing file:', err);
-          return res.status(500).json({ message: 'Failed to save file' });
+          console.error('Multer error:', err);
+          return res.status(500).json({ error: 'File upload failed', details: err });
         }
 
-        console.log('File uploaded successfully:', filePath);
+        // Check if the file was uploaded
+        if (!req.file) {
+          return res.status(400).json({ message: 'No file uploaded' });
+        }
+
+        console.log('File uploaded successfully:', req.file);
+
         return res.status(201).json({
           message: 'File uploaded successfully',
-          filePath: filePath, // Path to the saved file
+          fileInfo: req.file, // Contains file details (originalname, mimetype, etc.)
         });
       });
 
