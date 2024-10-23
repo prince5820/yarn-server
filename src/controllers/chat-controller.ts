@@ -96,29 +96,29 @@ export const getUnreadMessages = (req: Request, res: Response) => {
   });
 };
 
+const uploadDir = path.join('../../public/uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDir); // Set destination folder for uploads
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = Date.now() + "-" + file.originalname;
+    cb(null, uniqueName); // Generate unique file name
+  }
+});
+
+const upload = multer({ storage: storage });
+
 export const sendMessage = (req: Request, res: Response, io: any) => {
-  const { messageText, senderId, receiverId, file } = req.body;
+  const { messageText, senderId, receiverId } = req.body;
+  const file = req.file;
 
   try {
     if (file) {
-      const uploadDir = path.join('../../public/uploads');
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-      }
-
-      // Set up multer storage
-      const storage = multer.diskStorage({
-        destination: (req, file, cb) => {
-          cb(null, uploadDir); // Set destination folder for uploads
-        },
-        filename: (req, file, cb) => {
-          const uniqueName = Date.now() + "-" + file.originalname;
-          cb(null, uniqueName); // Generate unique file name
-        }
-      });
-
-      const upload = multer({ storage: storage });
-
       upload.single('file')(req, res, (err) => {
         if (err) {
           console.error('Multer error:', err);
