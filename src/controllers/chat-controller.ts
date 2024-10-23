@@ -114,8 +114,9 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 export const sendMessage = (req: Request, res: Response, io: any) => {
-  const { messageText, senderId, receiverId } = req.body;
-  const file = req.file;
+  const { messageText, senderId, receiverId, file } = req.body;
+  console.log(req.body);
+  console.log(file);
 
   try {
     if (file) {
