@@ -3,10 +3,18 @@ import { Socket } from 'socket.io';
 import { PATH_GENERATE_PDF, PATH_GET_TRANSACTION, PATH_GET_UNREAD_MESSAGES, PATH_GET_USERS, PATH_LOAD_INITIAL_MESSAGES, PATH_SEND_MESSAGES, PATH_SENT_PDF_IN_MAIL } from '../common/constants/routes';
 import { generatePdf, getTransactionsByUser, getUnreadMessages, getUsers, loadMessages, markMessagesAsRead, sendMessage, sentPdfInMail } from '../controllers/chat-controller';
 import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+
+const uploadDir = path.join('../../public/uploads');
+
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, '../../public/uploads'); // Set destination folder for uploads
+    cb(null, uploadDir); // Set destination folder for uploads
   },
   filename: (req, file, cb) => {
     const uniqueName = Date.now() + "-" + file.originalname;
