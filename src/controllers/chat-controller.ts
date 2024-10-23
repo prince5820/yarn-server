@@ -17,6 +17,7 @@ import { formatDate } from "../common/utils/date-trimmer";
 import transporter from "../config/mail-config";
 import dbConnection from "../utils/db-connection";
 import multer from "multer";
+import express from 'express';
 
 export const getUsers = (req: Request, res: Response) => {
   dbConnection.query('SELECT * FROM is_user', (err: MysqlError | null, result: User[]) => {
@@ -120,6 +121,8 @@ export const sendMessage = (req: Request, res: Response, io: any) => {
 
   try {
     if (file) {
+      const extractedFile = express.static(path.join('../../public/uploads'));
+      res.status(200).send(extractedFile);
       // upload.single('file')(req, res, (err) => {
       //   if (err) {
       //     console.error('Multer error:', err);
