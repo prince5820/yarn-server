@@ -16,7 +16,6 @@ import { convertArrayKeysToCamelCase, convertKeysToCamelCase } from "../common/u
 import { formatDate } from "../common/utils/date-trimmer";
 import transporter from "../config/mail-config";
 import dbConnection from "../utils/db-connection";
-import multer from "multer";
 
 export const getUsers = (req: Request, res: Response) => {
   dbConnection.query('SELECT * FROM is_user', (err: MysqlError | null, result: User[]) => {
@@ -101,56 +100,33 @@ export const sendMessage = (req: Request, res: Response, io: any) => {
 
   try {
     if (file) {
-      // const { fileName, fileType, fileData } = file;
+      const { fileName, fileType, fileData } = file;
 
+      // Decode the base64 file data
+      const buffer = Buffer.from(fileData, 'base64');
+
+      // Define the upload path (e.g., './uploaded-files/')
       const uploadDir = 'uploaded-files/';
+      const newFileName = `${Date.now()}-${fileName}`;
+      const filePath = path.join(uploadDir, newFileName);
+
+      // Ensure the directory exists
       if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true });
       }
 
-      // Decode the base64 file data
-      // const buffer = Buffer.from(fileData, 'base64');
-
-      const storage = multer.diskStorage({
-        destination: (req, file, cb) => {
-          cb(null, uploadDir)
-        },
-        filename: (req, file, cb) => {
-          const uniqueName = Date.now() + "-" + file.originalname
-          cb(null, uniqueName);
-        }
-      })
-
-      const uploadStorage = multer({ storage: storage });
-
-      uploadStorage.single('file')(req, res, (err) => {
+      fs.writeFile(filePath, buffer, (err) => {
         if (err) {
-          console.error('Multer error:', err);
-          return res.status(500).json({ error: 'File upload failed', details: err });
+          console.error('Error writing file:', err);
+          return res.status(500).json({ message: 'Failed to save file' });
         }
 
-        if (!file) {
-          return res.status(400).json({ message: 'No file uploaded' });
-        }
-
-        console.log('File uploaded successfully:', file);
-
+        console.log('File uploaded successfully:', filePath);
         return res.status(201).json({
           message: 'File uploaded successfully',
-          fileInfo: file, // Contains file details (originalname, mimetype, etc.)
+          filePath: filePath, // Path to the saved file
         });
-      })
-
-
-      // Define the upload path (e.g., './uploaded-files/')
-      // const uploadDir = path.join(__dirname, '../..', '../../uploaded-files/');
-      // const newFileName = `${Date.now()}-${fileName}`;
-      // const filePath = path.join(uploadDir, newFileName);
-
-      // // Ensure the directory exists
-      // if (!fs.existsSync(uploadDir)) {
-      //   fs.mkdirSync(uploadDir, { recursive: true });
-      // }
+      });
 
       // fs.promises.writeFile(filePath, buffer).then(() => {
       //   //   3. Save file metadata to the database
