@@ -101,17 +101,23 @@ export const sendMessage = (req: Request, res: Response, io: any) => {
 
   try {
     if (file) {
-      const { fileName, fileType, fileData } = file;
+      // const { fileName, fileType, fileData } = file;
+
+      const uploadDir = 'uploaded-files/';
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
 
       // Decode the base64 file data
-      const buffer = Buffer.from(fileData, 'base64');
+      // const buffer = Buffer.from(fileData, 'base64');
 
       const storage = multer.diskStorage({
         destination: (req, file, cb) => {
-          cb(null, 'uploaded-files/')
+          cb(null, uploadDir)
         },
         filename: (req, file, cb) => {
-          cb(null, Date.now() + "-" + file.originalname)
+          const uniqueName = Date.now() + "-" + file.originalname
+          cb(null, uniqueName);
         }
       })
 
@@ -119,10 +125,20 @@ export const sendMessage = (req: Request, res: Response, io: any) => {
 
       uploadStorage.single('file')(req, res, (err) => {
         if (err) {
-          return res.status(500).send(err);
+          console.error('Multer error:', err);
+          return res.status(500).json({ error: 'File upload failed', details: err });
         }
 
-        return res.send(201).send(res);
+        if (!file) {
+          return res.status(400).json({ message: 'No file uploaded' });
+        }
+
+        console.log('File uploaded successfully:', file);
+
+        return res.status(201).json({
+          message: 'File uploaded successfully',
+          fileInfo: file, // Contains file details (originalname, mimetype, etc.)
+        });
       })
 
 
