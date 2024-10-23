@@ -2,27 +2,6 @@ import express from 'express';
 import { Socket } from 'socket.io';
 import { PATH_GENERATE_PDF, PATH_GET_TRANSACTION, PATH_GET_UNREAD_MESSAGES, PATH_GET_USERS, PATH_LOAD_INITIAL_MESSAGES, PATH_SEND_MESSAGES, PATH_SENT_PDF_IN_MAIL } from '../common/constants/routes';
 import { generatePdf, getTransactionsByUser, getUnreadMessages, getUsers, loadMessages, markMessagesAsRead, sendMessage, sentPdfInMail } from '../controllers/chat-controller';
-import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
-
-const uploadDir = path.join('../../public/uploads');
-
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir); // Set destination folder for uploads
-  },
-  filename: (req, file, cb) => {
-    const uniqueName = Date.now() + "-" + file.originalname;
-    cb(null, uniqueName); // Generate unique file name
-  }
-});
-
-const upload = multer({ storage: storage });
 
 const chatRouter = express.Router();
 export const onlineUsers = new Map<string, string>();
@@ -40,7 +19,7 @@ export default chatRouter;
 export const chatRoutes = (io: any) => {
   io.on('connection', (socket: Socket) => {
     console.log('New client connected:', socket.id);
-    chatRouter.post(PATH_SEND_MESSAGES, upload.single('file'), (req, res) => sendMessage(req, res, io));
+    chatRouter.post(PATH_SEND_MESSAGES, (req, res) => sendMessage(req, res, io));
 
     socket.on('userConnected', (userId: string) => {
       onlineUsers.set(socket.id, userId);
