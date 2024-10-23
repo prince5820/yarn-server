@@ -101,7 +101,7 @@ export const sendMessage = (req: Request, res: Response, io: any) => {
 
   try {
     if (file) {
-      const uploadDir = path.join('../../public/uploads/');
+      const uploadDir = path.join('../../public/uploads');
       if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true });
       }
