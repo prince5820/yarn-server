@@ -3,12 +3,11 @@
 import { Request, Response } from "express";
 import fs from 'fs';
 import { MysqlError } from "mysql";
-import path from "path";
 import PDFDocument from 'pdfkit';
 import { Socket } from "socket.io";
 import { USER } from "../common/constants/constant";
 import { MESSAGE_INTERNAL_SERVER_ERROR, MESSAGE_NO_DATA_FOUND_GIVEN_DATA_RANGE, MESSAGE_SENT_MAIL_FAILURE, MESSAGE_SENT_MAIL_PDF_SUCCESS } from "../common/constants/message";
-import { ChatResponse, RequestPayload } from "../common/types/chat-types";
+import { ChatResponse } from "../common/types/chat-types";
 import { MysqlResult } from "../common/types/mysql-result";
 import { Payment } from "../common/types/payment-types";
 import { User } from "../common/types/user-types";
@@ -16,7 +15,6 @@ import { convertArrayKeysToCamelCase, convertKeysToCamelCase } from "../common/u
 import { formatDate } from "../common/utils/date-trimmer";
 import transporter from "../config/mail-config";
 import dbConnection from "../utils/db-connection";
-import multer from "multer";
 
 export const getUsers = (req: Request, res: Response) => {
   dbConnection.query('SELECT * FROM is_user', (err: MysqlError | null, result: User[]) => {
@@ -96,23 +94,6 @@ export const getUnreadMessages = (req: Request, res: Response) => {
   });
 };
 
-const uploadDir = path.join('../../public/uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir); // Set destination folder for uploads
-  },
-  filename: (req, file, cb) => {
-    const uniqueName = Date.now() + "-" + file.originalname;
-    cb(null, uniqueName); // Generate unique file name
-  }
-});
-
-const upload = multer({ storage: storage });
-
 export const sendMessage = (req: Request, res: Response, io: any) => {
   const { messageText, senderId, receiverId } = req.body;
   const file = req.file;
@@ -120,24 +101,25 @@ export const sendMessage = (req: Request, res: Response, io: any) => {
 
   try {
     if (file) {
-      upload.single('file')(req, res, (err) => {
-        if (err) {
-          console.error('Multer error:', err);
-          return res.status(500).json({ error: 'File upload failed', details: err });
-        }
+      console.log(file);
+      // upload.single('file')(req, res, (err) => {
+      //   if (err) {
+      //     console.error('Multer error:', err);
+      //     return res.status(500).json({ error: 'File upload failed', details: err });
+      //   }
 
-        // Check if the file was uploaded
-        if (!file) {
-          return res.status(400).json({ message: 'No file uploaded' });
-        }
+      //   // Check if the file was uploaded
+      //   if (!file) {
+      //     return res.status(400).json({ message: 'No file uploaded' });
+      //   }
 
-        console.log('File uploaded successfully:', file);
+      //   console.log('File uploaded successfully:', file);
 
-        return res.status(201).json({
-          message: 'File uploaded successfully',
-          fileInfo: file, // Contains file details (originalname, mimetype, etc.)
-        });
-      });
+      //   return res.status(201).json({
+      //     message: 'File uploaded successfully',
+      //     fileInfo: file, // Contains file details (originalname, mimetype, etc.)
+      //   });
+      // });
 
       // fs.promises.writeFile(filePath, buffer).then(() => {
       //   //   3. Save file metadata to the database
