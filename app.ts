@@ -40,6 +40,7 @@ app.use(chatRouter);
 chatRoutes(io);
 app.use(autoPayRouter);
 app.use('/uploads', express.static(path.join('public/uploads')));
+console.log('Serving uploads from:', path.join('public/uploads'));
 
 // cron.schedule('*/5 * * * *', () => {
 //   console.log('sent unread messages mail');

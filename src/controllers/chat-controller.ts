@@ -106,8 +106,6 @@ export const sendMessage = (req: Request, res: Response, io: any) => {
 
             const newMessage = convertKeysToCamelCase(result[0]);
 
-            newMessage.filePath = file.path;
-
             res.status(200).send(newMessage);
             io.to(senderId.toString()).emit('receiveMessage', newMessage);
             io.to(receiverId.toString()).emit('receiveMessage', newMessage);
