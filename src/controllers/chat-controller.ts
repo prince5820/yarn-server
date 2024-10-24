@@ -51,26 +51,7 @@ export const loadMessages = (req: Request, res: Response) => {
 
     const camelCaseResult = convertArrayKeysToCamelCase(results);
 
-    const processedMessages = await Promise.all(
-      camelCaseResult.map(async (message) => {
-        if (message.fileName && message.filePath) {
-          try {
-            const fileBuffer = await fs.promises.readFile(message.filePath);
-            return {
-              ...message,
-              fileData: fileBuffer.toString('base64'),
-            };
-          } catch (fileError) {
-            console.error('Error reading file:', fileError);
-            return message;
-          }
-        } else {
-          return message;
-        }
-      })
-    );
-
-    res.status(200).send(processedMessages);
+    res.status(200).send(camelCaseResult);
   });
 };
 
@@ -97,86 +78,45 @@ export const getUnreadMessages = (req: Request, res: Response) => {
 export const sendMessage = (req: Request, res: Response, io: any) => {
   const { messageText, senderId, receiverId } = req.body;
   const file = req.file;
-  console.log(file);
-  return res.status(201).json({
-    message: 'File uploaded',
-    fileInfo: file
-  })
 
   try {
     if (file) {
-      // upload.single('file')(req, res, (err) => {
-      //   if (err) {
-      //     console.error('Multer error:', err);
-      //     return res.status(500).json({ error: 'File upload failed', details: err });
-      //   }
+      const fileName = file.originalname;
+      const fileType = file.mimetype;
+      const fileSql = 'INSERT INTO chat (message_text, sender_id, receiver_id, file_name, file_type) VALUES (?, ?, ?, ?, ?)';
+      const fileValues = [null, senderId, receiverId, fileName, fileType];
 
-      //   // Check if the file was uploaded
-      //   if (!file) {
-      //     return res.status(400).json({ message: 'No file uploaded' });
-      //   }
+      dbConnection.query(fileSql, fileValues, (err: MysqlError | null, result: MysqlResult) => {
+        if (err) {
+          console.log('Err', err);
+          return res.status(500).send(MESSAGE_INTERNAL_SERVER_ERROR);
+        }
 
-      //   console.log('File uploaded successfully:', file);
+        if (result) {
+          const selectSql = `
+            SELECT id, message_text, DATE_FORMAT(message_date_time, '%Y-%m-%d %H:%i:%s') as message_date_time, sender_id, receiver_id, is_read, file_name, file_type
+            FROM chat 
+            WHERE id = ?`;
 
-      //   return res.status(201).json({
-      //     message: 'File uploaded successfully',
-      //     fileInfo: file, // Contains file details (originalname, mimetype, etc.)
-      //   });
-      // });
+          dbConnection.query(selectSql, [result.insertId], async (err: MysqlError | null, result: ChatResponse[]) => {
+            if (err) {
+              console.log('err', err);
+              return res.status(500).send(MESSAGE_INTERNAL_SERVER_ERROR);
+            }
 
-      // fs.promises.writeFile(filePath, buffer).then(() => {
-      //   //   3. Save file metadata to the database
-      //   const fileSql = 'INSERT INTO chat (message_text, sender_id, receiver_id, file_name, file_path, file_type) VALUES (?, ?, ?, ?, ?, ?)';
-      //   const fileValues = [null, senderId, receiverId, fileName, filePath, fileType];
+            const newMessage = convertKeysToCamelCase(result[0]);
 
-      //   dbConnection.query(fileSql, fileValues, (err: MysqlError | null, result: MysqlResult) => {
-      //     if (err) {
-      //       console.log('Err', err);
-      //       return res.status(500).send(MESSAGE_INTERNAL_SERVER_ERROR);
-      //     }
+            res.status(200).send(newMessage);
+            io.to(senderId.toString()).emit('receiveMessage', newMessage);
+            io.to(receiverId.toString()).emit('receiveMessage', newMessage);
 
-      //     if (result) {
-      //       const selectSql = `
-      //       SELECT id, message_text, DATE_FORMAT(message_date_time, '%Y-%m-%d %H:%i:%s') as message_date_time, sender_id, receiver_id, is_read, file_name, file_path, file_type
-      //       FROM chat 
-      //       WHERE id = ?`;
-
-      //       dbConnection.query(selectSql, [result.insertId], async (err: MysqlError | null, result: ChatResponse[]) => {
-      //         if (err) {
-      //           console.log('err', err);
-      //           return res.status(500).send(MESSAGE_INTERNAL_SERVER_ERROR);
-      //         }
-
-      //         const newMessage = convertKeysToCamelCase(result[0]);
-      //         const processedMessage = await Promise.all([
-      //           (async () => {
-      //             if (newMessage.fileName && newMessage.filePath) {
-      //               try {
-      //                 const fileBuffer = await fs.promises.readFile(newMessage.filePath);
-      //                 return {
-      //                   ...newMessage,
-      //                   fileData: fileBuffer.toString('base64'),
-      //                 };
-      //               } catch (fileError) {
-      //                 console.error('Error reading file:', fileError);
-      //                 return newMessage;
-      //               }
-      //             }
-      //             return newMessage;
-      //           })()
-      //         ]);
-      //         res.status(200).send(processedMessage[0]);
-      //         io.to(senderId.toString()).emit('receiveMessage', processedMessage[0]);
-      //         io.to(receiverId.toString()).emit('receiveMessage', processedMessage[0]);
-
-      //         io.to(receiverId.toString()).emit('increaseUnreadCount', { senderId });
-      //       });
-      //     }
-      //   });
-      // })
+            io.to(receiverId.toString()).emit('increaseUnreadCount', { senderId });
+          });
+        }
+      });
     } else {
       if (messageText) {
-        const fileSql = 'INSERT INTO chat (message_text, sender_id, receiver_id, file_name, file_path, file_type) VALUES (?, ?, ?, ?, ?, ?)';
+        const fileSql = 'INSERT INTO chat (message_text, sender_id, receiver_id, file_name, file_type) VALUES (?, ?, ?, ?, ?)';
         const fileValues = [messageText, senderId, receiverId, null, null, null];
 
         dbConnection.query(fileSql, fileValues, (err: MysqlError | null, result: MysqlResult) => {
@@ -187,7 +127,7 @@ export const sendMessage = (req: Request, res: Response, io: any) => {
 
           if (result) {
             const selectSql = `
-                    SELECT id, message_text, DATE_FORMAT(message_date_time, '%Y-%m-%d %H:%i:%s') as message_date_time, sender_id, receiver_id, is_read, file_name, file_path, file_type
+                    SELECT id, message_text, DATE_FORMAT(message_date_time, '%Y-%m-%d %H:%i:%s') as message_date_time, sender_id, receiver_id, is_read, file_name, file_type
                     FROM chat 
                     WHERE id = ?`;
 

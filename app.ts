@@ -16,6 +16,7 @@ import { MysqlError } from 'mysql';
 import { Payment } from './src/common/types/payment-types';
 import { convertArrayKeysToCamelCase } from './src/common/utils/camelcase-converter';
 import { MysqlResult } from './src/common/types/mysql-result';
+import path from 'path';
 
 const app = express();
 const server = createServer(app);
@@ -23,12 +24,6 @@ const io = initializeWebSocket(server);
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ limit: '2mb', extended: true }));
 app.use(cors({
-  origin: 'https://talkwallet.netlify.app',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  credentials: true,
-}));
-
-app.use('/socket.io', cors({
   origin: 'https://talkwallet.netlify.app',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true,
@@ -44,6 +39,7 @@ app.use(contactRouter);
 app.use(chatRouter);
 chatRoutes(io);
 app.use(autoPayRouter);
+app.use('/uploads', express.static(path.join('public/uploads')));
 
 // cron.schedule('*/5 * * * *', () => {
 //   console.log('sent unread messages mail');
