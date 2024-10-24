@@ -31,7 +31,7 @@ export const loadMessages = (req: Request, res: Response) => {
   const { senderId, receiverId } = req.body;
 
   const sql = `
-      SELECT id, message_text, DATE_FORMAT(message_date_time, '%Y-%m-%d %H:%i:%s') as message_date_time, sender_id, receiver_id, is_read, file_name, file_path, file_type
+      SELECT id, message_text, DATE_FORMAT(message_date_time, '%Y-%m-%d %H:%i:%s') as message_date_time, sender_id, receiver_id, is_read, file_name, file_type
       FROM chat
       WHERE 
         (sender_id = ? AND receiver_id = ?) 
