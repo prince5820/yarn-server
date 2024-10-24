@@ -81,6 +81,7 @@ export const sendMessage = (req: Request, res: Response, io: any) => {
 
   try {
     if (file) {
+      res.status(201).send(file);
       const fileName = file.originalname;
       const fileType = file.mimetype;
       const fileSql = 'INSERT INTO chat (message_text, sender_id, receiver_id, file_name, file_type) VALUES (?, ?, ?, ?, ?)';
