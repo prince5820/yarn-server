@@ -31,6 +31,9 @@ app.use(cors({
 
 app.options('*', cors());
 
+app.use(express.static('public/uploads'));
+console.log('Serving uploads from:', path.join('public/uploads'));
+
 app.use(userRouter);
 app.use(profileRouter);
 app.use(categoryRouter);
@@ -39,8 +42,6 @@ app.use(contactRouter);
 app.use(chatRouter);
 chatRoutes(io);
 app.use(autoPayRouter);
-app.use('/uploads', express.static(path.join('/public/uploads')));
-console.log('Serving uploads from:', path.join('public/uploads'));
 
 // cron.schedule('*/5 * * * *', () => {
 //   console.log('sent unread messages mail');
