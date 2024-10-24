@@ -31,8 +31,7 @@ app.use(cors({
 
 app.options('*', cors());
 
-app.use(express.static('public/uploads'));
-console.log('Serving uploads from:', path.join('public/uploads'));
+app.use('/upload', express.static(__dirname + '/public/uploads'));
 
 app.use(userRouter);
 app.use(profileRouter);
