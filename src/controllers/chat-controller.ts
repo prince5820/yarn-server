@@ -88,7 +88,7 @@ export const sendMessage = (req: Request, res: Response, io: any) => {
 
       dbConnection.query(fileSql, fileValues, (err: MysqlError | null, result: MysqlResult) => {
         if (err) {
-          return res.status(500).send(err);
+          return res.status(500).send(MESSAGE_INTERNAL_SERVER_ERROR);
         }
 
         if (result) {
@@ -99,7 +99,7 @@ export const sendMessage = (req: Request, res: Response, io: any) => {
 
           dbConnection.query(selectSql, [result.insertId], async (err: MysqlError | null, result: ChatResponse[]) => {
             if (err) {
-              return res.status(500).send(err);
+              return res.status(500).send(MESSAGE_INTERNAL_SERVER_ERROR);
             }
 
             const newMessage = convertKeysToCamelCase(result[0]);
