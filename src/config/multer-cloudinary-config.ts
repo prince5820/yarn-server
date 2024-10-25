@@ -6,14 +6,8 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'uploads',
-    resource_type: "auto",
-    format: async (req: any, file: any) => {
-      const extension = file.originalname.split(".").pop();
-      return extension; // Keeps original file extension
-    },
+    resource_type: "auto"
   } as Record<string, any>
 })
-
-console.log(storage);
 
 export const upload = multer({ storage });
