@@ -78,6 +78,7 @@ export const sendMessage = (req: Request, res: Response, io: any) => {
   const { messageText, senderId, receiverId } = req.body;
   const file = req.file;
   console.dir(req.file, { depth: null }); // Provides a more comprehensive inspection
+  console.log(JSON.stringify(req.file, null, 2));
 
   try {
     if (file) {
@@ -89,7 +90,7 @@ export const sendMessage = (req: Request, res: Response, io: any) => {
 
       dbConnection.query(fileSql, fileValues, (err: MysqlError | null, result: MysqlResult) => {
         if (err) {
-          console.log('Err', err);
+          console.log(JSON.stringify(err, null, 2));
           return res.status(500).send(MESSAGE_INTERNAL_SERVER_ERROR);
         }
 
@@ -101,7 +102,7 @@ export const sendMessage = (req: Request, res: Response, io: any) => {
 
           dbConnection.query(selectSql, [result.insertId], async (err: MysqlError | null, result: ChatResponse[]) => {
             if (err) {
-              console.log('err', err);
+              console.log(JSON.stringify(err, null, 2));
               return res.status(500).send(MESSAGE_INTERNAL_SERVER_ERROR);
             }
 
