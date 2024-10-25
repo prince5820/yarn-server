@@ -77,7 +77,7 @@ export const getUnreadMessages = (req: Request, res: Response) => {
 export const sendMessage = (req: Request, res: Response, io: any) => {
   const { messageText, senderId, receiverId } = req.body;
   const file = req.file;
-  console.log(req.file);
+  console.dir(req.file, { depth: null }); // Provides a more comprehensive inspection
 
   try {
     if (file) {
