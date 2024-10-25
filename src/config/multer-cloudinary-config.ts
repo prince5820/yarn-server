@@ -12,6 +12,7 @@ const storage = new CloudinaryStorage({
       folder: 'uploads',
       resource_type: isImage ? "image" : "raw", // Use "raw" for non-images
       format: extension,
+      upload_preset: 'vtcdef5l'
     };
   },
 });
