@@ -1,7 +1,6 @@
 // chat-controller.ts
 
 import { Request, Response } from "express";
-import fs from 'fs';
 import { MysqlError } from "mysql";
 import PDFDocument from 'pdfkit';
 import { Socket } from "socket.io";
@@ -31,7 +30,7 @@ export const loadMessages = (req: Request, res: Response) => {
   const { senderId, receiverId } = req.body;
 
   const sql = `
-      SELECT id, message_text, DATE_FORMAT(message_date_time, '%Y-%m-%d %H:%i:%s') as message_date_time, sender_id, receiver_id, is_read, file_name, file_type
+      SELECT id, message_text, DATE_FORMAT(message_date_time, '%Y-%m-%d %H:%i:%s') as message_date_time, sender_id, receiver_id, is_read, file_name, file_type, file_path
       FROM chat
       WHERE 
         (sender_id = ? AND receiver_id = ?) 
@@ -83,8 +82,9 @@ export const sendMessage = (req: Request, res: Response, io: any) => {
     if (file) {
       const fileName = file.originalname;
       const fileType = file.mimetype;
-      const fileSql = 'INSERT INTO chat (message_text, sender_id, receiver_id, file_name, file_type) VALUES (?, ?, ?, ?, ?)';
-      const fileValues = [null, senderId, receiverId, fileName, fileType];
+      const filePath = file.path;
+      const fileSql = 'INSERT INTO chat (message_text, sender_id, receiver_id, file_name, file_type, file_path) VALUES (?, ?, ?, ?, ?, ?)';
+      const fileValues = [null, senderId, receiverId, fileName, fileType, filePath];
 
       dbConnection.query(fileSql, fileValues, (err: MysqlError | null, result: MysqlResult) => {
         if (err) {
@@ -94,7 +94,7 @@ export const sendMessage = (req: Request, res: Response, io: any) => {
 
         if (result) {
           const selectSql = `
-            SELECT id, message_text, DATE_FORMAT(message_date_time, '%Y-%m-%d %H:%i:%s') as message_date_time, sender_id, receiver_id, is_read, file_name, file_type
+            SELECT id, message_text, DATE_FORMAT(message_date_time, '%Y-%m-%d %H:%i:%s') as message_date_time, sender_id, receiver_id, is_read, file_name, file_type, file_path
             FROM chat 
             WHERE id = ?`;
 
@@ -116,7 +116,7 @@ export const sendMessage = (req: Request, res: Response, io: any) => {
       });
     } else {
       if (messageText) {
-        const fileSql = 'INSERT INTO chat (message_text, sender_id, receiver_id, file_name, file_type) VALUES (?, ?, ?, ?, ?)';
+        const fileSql = 'INSERT INTO chat (message_text, sender_id, receiver_id, file_name, file_type, file_path) VALUES (?, ?, ?, ?, ?, ?)';
         const fileValues = [messageText, senderId, receiverId, null, null, null];
 
         dbConnection.query(fileSql, fileValues, (err: MysqlError | null, result: MysqlResult) => {
@@ -127,7 +127,7 @@ export const sendMessage = (req: Request, res: Response, io: any) => {
 
           if (result) {
             const selectSql = `
-                    SELECT id, message_text, DATE_FORMAT(message_date_time, '%Y-%m-%d %H:%i:%s') as message_date_time, sender_id, receiver_id, is_read, file_name, file_type
+                    SELECT id, message_text, DATE_FORMAT(message_date_time, '%Y-%m-%d %H:%i:%s') as message_date_time, sender_id, receiver_id, is_read, file_name, file_type, file_path
                     FROM chat 
                     WHERE id = ?`;
 

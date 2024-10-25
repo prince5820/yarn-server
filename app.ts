@@ -1,22 +1,20 @@
-import express from 'express'
 import cors from 'cors';
-import userRouter from './src/routes/user-routes';
-import profileRouter from './src/routes/profile-routes';
-import categoryRouter from './src/routes/category-routes';
-import paymentRouter from './src/routes/payment-router';
-import contactRouter from './src/routes/contact-routes';
-import chatRouter, { chatRoutes, onlineUsers } from './src/routes/chat-routes';
+import express from 'express';
 import { createServer } from 'http';
-import { initializeWebSocket } from './src/utils/web-socket';
-import cron from 'node-cron';
-import { sentScheduleMail } from './src/controllers/chat-controller';
-import autoPayRouter from './src/routes/auto-pay-routes';
-import dbConnection from './src/utils/db-connection';
 import { MysqlError } from 'mysql';
+import cron from 'node-cron';
+import { MysqlResult } from './src/common/types/mysql-result';
 import { Payment } from './src/common/types/payment-types';
 import { convertArrayKeysToCamelCase } from './src/common/utils/camelcase-converter';
-import { MysqlResult } from './src/common/types/mysql-result';
-import path from 'path';
+import autoPayRouter from './src/routes/auto-pay-routes';
+import categoryRouter from './src/routes/category-routes';
+import chatRouter, { chatRoutes } from './src/routes/chat-routes';
+import contactRouter from './src/routes/contact-routes';
+import paymentRouter from './src/routes/payment-router';
+import profileRouter from './src/routes/profile-routes';
+import userRouter from './src/routes/user-routes';
+import dbConnection from './src/utils/db-connection';
+import { initializeWebSocket } from './src/utils/web-socket';
 
 const app = express();
 const server = createServer(app);
@@ -30,8 +28,6 @@ app.use(cors({
 }));
 
 app.options('*', cors());
-
-app.use(express.static('public'));
 
 app.use(userRouter);
 app.use(profileRouter);
