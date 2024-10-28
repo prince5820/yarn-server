@@ -14,7 +14,6 @@ import { convertArrayKeysToCamelCase, convertKeysToCamelCase } from "../common/u
 import { formatDate } from "../common/utils/date-trimmer";
 import transporter from "../config/mail-config";
 import dbConnection from "../utils/db-connection";
-import path from "path";
 
 export const getUsers = (req: Request, res: Response) => {
   dbConnection.query('SELECT * FROM is_user', (err: MysqlError | null, result: User[]) => {
@@ -201,13 +200,10 @@ export const generatePdf = (req: Request, res: Response) => {
         size: 'A4',
       });
 
-      const notoEmojiPath = path.join(__dirname, '../assets/Noto_Color_Emoji/NotoColorEmoji-Regular.ttf');
-      doc.registerFont('NotoColorEmoji', notoEmojiPath);
-
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', 'attachment');
 
-      doc.font('NotoColorEmoji').fontSize(20).text('Chat History', { align: 'center', underline: true });
+      doc.fontSize(20).text('Chat History', { align: 'center', underline: true });
       doc.moveDown(2); // Add space below the title
 
       doc.fontSize(14).text(`Username: ${userName}`, { align: 'left' });
@@ -258,11 +254,13 @@ export const generatePdf = (req: Request, res: Response) => {
           .fillColor('black');
 
         // Draw the message text
-        doc.font('NotoColorEmoji').fontSize(14).text(message_text, textPositionX + 10, doc.y + 10, {
-          width: textBoxWidth - 20,
-          align: alignment,
-        });
-        doc.moveDown(2);
+        doc
+          .fontSize(messageFontSize)
+          .text(message_text, textPositionX + 10, doc.y + 10, {
+            width: textBoxWidth - 20,
+            align: alignment,
+          })
+          .moveDown(2); // Add space after each message
       });
 
       // Finalize the PDF and stream it in response
