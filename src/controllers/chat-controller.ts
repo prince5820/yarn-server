@@ -70,6 +70,7 @@ export const getUnreadMessages = (req: Request, res: Response) => {
     }
 
     const camelCaseResult = convertArrayKeysToCamelCase(unreadResults);
+    console.log(camelCaseResult);
     res.status(200).send(camelCaseResult);
   });
 };
