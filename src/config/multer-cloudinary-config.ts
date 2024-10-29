@@ -6,11 +6,19 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: async (req: any, file: any) => {
     const extension = file.originalname.split('.').pop().toLowerCase();
-    const isImage = file.mimetype.startsWith("image/");
+
+    let resourceType: string;
+    if (file.mimetype.startsWith("image/")) {
+      resourceType = "image";
+    } else if (file.mimetype.startsWith("video/")) {
+      resourceType = "video";
+    } else {
+      resourceType = "raw";
+    }
 
     return {
       folder: 'uploads',
-      resource_type: isImage ? "image" : "raw", // Use "raw" for non-images
+      resource_type: resourceType,
       format: extension,
       upload_preset: 'vtcdef5l'
     };
