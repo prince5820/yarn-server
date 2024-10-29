@@ -14,6 +14,8 @@ import { convertArrayKeysToCamelCase, convertKeysToCamelCase } from "../common/u
 import { formatDate } from "../common/utils/date-trimmer";
 import transporter from "../config/mail-config";
 import dbConnection from "../utils/db-connection";
+import twemoji from "twemoji";
+import axios from "axios";
 
 export const getUsers = (req: Request, res: Response) => {
   dbConnection.query('SELECT * FROM is_user', (err: MysqlError | null, result: User[]) => {
@@ -169,7 +171,7 @@ export const markMessagesAsRead = (socket: Socket, io: any) => {
   };
 };
 
-export const generatePdf = (req: Request, res: Response) => {
+export const generatePdf = async (req: Request, res: Response) => {
   const { startDate, endDate, senderId, user, selectedOption } = req.body;
   const receiverId = user.id;
   const userName = `${user.firstName} ${user.lastName}`;
@@ -188,7 +190,7 @@ export const generatePdf = (req: Request, res: Response) => {
     );
   `;
 
-  dbConnection.query(sql, [startDate, endDate, senderId, receiverId, receiverId, senderId], (err: MysqlError | null, result: any[]) => {
+  dbConnection.query(sql, [startDate, endDate, senderId, receiverId, receiverId, senderId], async (err, result) => {
     if (err) {
       res.status(500).send(MESSAGE_INTERNAL_SERVER_ERROR);
       return;
@@ -204,7 +206,7 @@ export const generatePdf = (req: Request, res: Response) => {
       res.setHeader('Content-Disposition', 'attachment');
 
       doc.fontSize(20).text('Chat History', { align: 'center', underline: true });
-      doc.moveDown(2); // Add space below the title
+      doc.moveDown(2);
 
       doc.fontSize(14).text(`Username: ${userName}`, { align: 'left' });
       doc.moveDown(0.5);
@@ -216,32 +218,45 @@ export const generatePdf = (req: Request, res: Response) => {
       }
       doc.moveDown(2);
 
-      // Helper function to calculate height for multi-line messages
-      const calculateMessageHeight = (text: string, width: number, fontSize: number) => {
-        const tempDoc = new PDFDocument({ size: 'A4' });
-        tempDoc.fontSize(fontSize);
-        return tempDoc.heightOfString(text, { width });
-      };
-
-      // Loop through each message
-      result.forEach((message, index) => {
-        const { sender_id, receiver_id, message_text } = message;
-
-        // Determine if the current message is from the sender or receiver
-        const isSender = sender_id === senderId; // Assuming sender_id 4 is the current user (adjust as needed)
+      for (const message of result) {
+        const { sender_id, message_text } = message;
+        const isSender = sender_id === senderId;
         const alignment = isSender ? 'right' : 'left';
-        const backgroundColor = isSender ? '#D3FEDA' : '#F1F1F1'; // Green for sender, grey for receiver
+        const backgroundColor = isSender ? '#D3FEDA' : '#F1F1F1';
 
-        // Set the message box dimensions
-        const textBoxWidth = 450; // Fixed width for messages
+        const textBoxWidth = 450;
         const messageFontSize = 14;
-
         const textPositionX = isSender ? doc.page.width - doc.page.margins.right - textBoxWidth : doc.page.margins.left;
 
-        // Calculate the height of the message (in case it's multi-line)
-        const messageHeight = calculateMessageHeight(message_text, textBoxWidth, messageFontSize) + 20; // Adding padding
+        let x = textPositionX + 10;
+        let maxHeight = 20; // Starting height, 20px for padding
 
-        // Check if the message will exceed the current page and handle page breaks
+        for (const char of message_text) {
+          const emojiUrl = twemoji.parse(char, { folder: '72x72', ext: '.png' });
+
+          if (emojiUrl !== char) {
+            try {
+              const response = await axios.get(emojiUrl, { responseType: 'arraybuffer' });
+              const emojiImage = Buffer.from(response.data, 'binary');
+              doc.image(emojiImage, x, doc.y + 10, { width: 20, height: 20 });
+              x += 24;
+              maxHeight = Math.max(maxHeight, 24); // Track max height for emojis
+            } catch (error) {
+              // If emoji fails to load, fall back to text
+              doc.fontSize(messageFontSize); // Set font size before calculating width
+              doc.fillColor('black').text(char, x, doc.y + 10, { align: alignment });
+              x += doc.widthOfString(char);
+            }
+          } else {
+            doc.fontSize(messageFontSize); // Set font size before calculating width
+            doc.fillColor('black').text(char, x, doc.y + 10, { align: alignment });
+            x += doc.widthOfString(char);
+          }
+        }
+
+        const messageHeight = maxHeight + 20; // Add padding to calculated height
+
+        // Check if the message will exceed the current page
         if (doc.y + messageHeight > doc.page.height - doc.page.margins.bottom) {
           doc.addPage(); // Start a new page if needed
         }
@@ -250,20 +265,12 @@ export const generatePdf = (req: Request, res: Response) => {
         doc
           .roundedRect(textPositionX, doc.y, textBoxWidth, messageHeight, 6)
           .fill(backgroundColor)
-          .stroke()
-          .fillColor('black');
+          .stroke();
 
-        // Draw the message text
-        doc
-          .fontSize(messageFontSize)
-          .text(message_text, textPositionX + 10, doc.y + 10, {
-            width: textBoxWidth - 20,
-            align: alignment,
-          })
-          .moveDown(2); // Add space after each message
-      });
+        // Move down after each message
+        doc.moveDown(2);
+      }
 
-      // Finalize the PDF and stream it in response
       doc.pipe(res);
       doc.end();
     } else {
