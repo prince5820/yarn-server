@@ -220,6 +220,11 @@ export const generatePdf = async (req: Request, res: Response) => {
 
       for (const message of result) {
         const { sender_id, message_text } = message;
+
+        if (typeof message_text !== 'string') {
+          continue; // Skip this message if it's not a valid string
+        }
+
         const isSender = sender_id === senderId;
         const alignment = isSender ? 'right' : 'left';
         const backgroundColor = isSender ? '#D3FEDA' : '#F1F1F1';
