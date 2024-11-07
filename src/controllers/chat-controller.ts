@@ -83,8 +83,8 @@ export const sendMessage = (req: Request, res: Response, io: any) => {
       const fileName = file.originalname;
       const fileType = file.mimetype;
       const filePath = file.path;
-      const fileSql = 'INSERT INTO chat (message_text, sender_id, receiver_id, file_name, file_type, file_path) VALUES (?, ?, ?, ?, ?, ?)';
-      const fileValues = [null, senderId, receiverId, fileName, fileType, filePath];
+      const fileSql = 'INSERT INTO chat (message_text, sender_id, receiver_id, is_read, file_name, file_type, file_path) VALUES (?, ?, ?, ?, ?, ?)';
+      const fileValues = [null, senderId, receiverId, 0, fileName, fileType, filePath];
 
       dbConnection.query(fileSql, fileValues, (err: MysqlError | null, result: MysqlResult) => {
         if (err) {
@@ -114,8 +114,8 @@ export const sendMessage = (req: Request, res: Response, io: any) => {
       });
     } else {
       if (messageText) {
-        const fileSql = 'INSERT INTO chat (message_text, sender_id, receiver_id, file_name, file_type, file_path) VALUES (?, ?, ?, ?, ?, ?)';
-        const fileValues = [messageText, senderId, receiverId, null, null, null];
+        const fileSql = 'INSERT INTO chat (message_text, sender_id, receiver_id, is_read, file_name, file_type, file_path) VALUES (?, ?, ?, ?, ?, ?)';
+        const fileValues = [messageText, senderId, receiverId, 0, null, null, null];
 
         dbConnection.query(fileSql, fileValues, (err: MysqlError | null, result: MysqlResult) => {
           if (err) {
