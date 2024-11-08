@@ -1,7 +1,7 @@
 // auth routes
-export const PATH_SIGN_IN = '/sign-in/:email'
+export const PATH_SIGN_IN = '/sign-in'
 export const PATH_SIGN_UP = '/sign-up'
-export const PATH_FORGET_PASSWORD = '/forget-password/:email'
+export const PATH_FORGET_PASSWORD = '/forget-password'
 
 // profile routes
 export const PATH_GET_USER_BY_ID = '/userById/:userId'

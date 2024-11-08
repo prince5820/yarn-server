@@ -10,7 +10,7 @@ import { MESSAGE_EMAIL_ALREADY_EXIST, MESSAGE_INTERNAL_SERVER_ERROR, MESSAGE_PAS
 import { convertArrayKeysToCamelCase } from "../common/utils/camelcase-converter";
 
 export const signIn = (req: Request, res: Response) => {
-  const email = req.params.email;
+  const { email } = req.body;
   dbConnection.query('select * from is_user where email = ? limit 1', [email], (err: MysqlError | null, result: User[]) => {
     if (err) {
       res.status(500).send(MESSAGE_INTERNAL_SERVER_ERROR);
@@ -52,7 +52,7 @@ export const signUp = (req: Request, res: Response) => {
 }
 
 export const forgetPassword = (req: Request, res: Response) => {
-  const email: string = req.params.email;
+  const { email } = req.body;
 
   dbConnection.query('SELECT * FROM is_user where email = ?', [email], (err: MysqlError | null, result: User[]) => {
     if (err) {
