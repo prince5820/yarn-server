@@ -153,17 +153,17 @@ export const sendMessage = (req: Request, res: Response, io: any) => {
 
 export const markMessagesAsRead = (socket: Socket, io: any) => {
   return ({ senderId, receiverId }: { senderId: number; receiverId: number }) => {
-    const sql = `
+    const updateSql = `
       UPDATE chat
       SET is_read = 1
-      WHERE sender_id = ? AND receiver_id = ? AND is_read = 0;
-    `;
+      WHERE sender_id = ? AND receiver_id = ? AND is_read = 0`;
 
-    dbConnection.query(sql, [senderId, receiverId], (err: MysqlError | null, result: any) => {
+    dbConnection.query(updateSql, [senderId, receiverId], (err: MysqlError | null, result: any) => {
       if (err) {
         console.error('Error updating message status:', err);
       } else {
-        console.log(`Messages from senderId ${senderId} marked as read.`);
+        io.to(senderId.toString()).emit('resetUnreadCount', { receiverId });
+        console.log(`Messages from sender ${senderId} marked as read by receiver ${receiverId}.`);
       }
     });
   };
